@@ -4,34 +4,87 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Smart Plant Monitoring</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   <style>
     :root {
       --bg-color: #e8f5e9;
-      --card-bg: rgba(255, 255, 255, 0.6);
+      --card-bg: rgba(255, 255, 255, 0.85);
       --text-color: #2e7d32;
       --accent-color: #66bb6a;
+      --secondary-color: #81c784;
       --border-radius: 1.5rem;
+      --shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      --dark-bg: #121212;
+      --dark-card: rgba(33, 33, 33, 0.7);
+      --dark-text: #ffffff;
     }
 
     body {
       font-family: 'Poppins', sans-serif;
-      background-color: var(--bg-color);
+      background: linear-gradient(-45deg, #e8f5e9, #e0f7fa, #f1f8e9, #e8f5e9);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
       color: var(--text-color);
       margin: 0;
       padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
       min-height: 100vh;
+      transition: all 0.5s ease;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    body.dark-mode {
+      background: linear-gradient(-45deg, #121212, #1a1a1a, #121212, #1a1a1a);
+      color: var(--dark-text);
+    }
+
+    .header-container {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
     }
 
     .header {
       font-size: 2.5rem;
-      margin-top: 2rem;
-      font-weight: 600;
+      font-weight: 700;
       text-shadow: 1px 1px 3px #c8e6c9;
+      letter-spacing: -0.5px;
+      background: linear-gradient(90deg, var(--accent-color), var(--secondary-color));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin: 0;
+    }
+
+    .status-bar {
+      display: flex;
+      gap: 20px;
+      padding: 0.8rem 1.5rem;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      backdrop-filter: blur(5px);
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      box-shadow: 0 0 8px var(--accent-color);
     }
 
     .dashboard {
@@ -39,19 +92,33 @@
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 1.5rem;
       width: 90%;
-      margin: 2rem 0;
+      margin: 2rem auto;
+      padding: 0 1rem;
     }
 
     .card {
       background: var(--card-bg);
       border-radius: var(--border-radius);
       padding: 1.5rem;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: var(--shadow);
       text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.18);
       opacity: 0;
       transform: translateY(20px);
       animation: fadeInUp 0.6s ease forwards;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    body.dark-mode .card {
+      background: var(--dark-card);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     @keyframes fadeInUp {
@@ -60,6 +127,12 @@
         transform: translateY(0);
       }
     }
+
+    .card:nth-child(1) { animation-delay: 0.1s; }
+    .card:nth-child(2) { animation-delay: 0.2s; }
+    .card:nth-child(3) { animation-delay: 0.3s; }
+    .card:nth-child(4) { animation-delay: 0.4s; }
+    .card:nth-child(5) { animation-delay: 0.5s; }
 
     .icon {
       font-size: 2.5rem;
@@ -73,29 +146,102 @@
     }
 
     .value {
-      font-size: 2rem;
+      font-size: 2.2rem;
       font-weight: 600;
+      margin: 0.5rem 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+    }
+
+    .unit {
+      font-size: 1rem;
+      color: var(--text-color);
+      margin-left: 4px;
+      margin-bottom: 6px;
+      opacity: 0.8;
+    }
+
+    body.dark-mode .unit {
+      color: var(--dark-text);
     }
 
     .label {
       font-size: 1rem;
       margin-top: 0.5rem;
       color: #388e3c;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    body.dark-mode .label {
+      color: #a5d6a7;
     }
 
     .status-card {
       grid-column: span 2;
-      background-color: #a5d6a7;
+      background-color: rgba(165, 214, 167, 0.3);
       font-weight: 500;
       color: #1b5e20;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      padding: 1rem;
+    }
+
+    body.dark-mode .status-card {
+      background-color: rgba(165, 214, 167, 0.1);
+      color: #a5d6a7;
+    }
+
+    .status-item-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0.8rem;
+    }
+
+    .status-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: rgba(102, 187, 106, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-color);
+    }
+
+    .status-info h3 {
+      margin: 0;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #2e7d32;
+    }
+
+    body.dark-mode .status-info h3 {
+      color: #a5d6a7;
+    }
+
+    .status-info p {
+      margin: 4px 0 0;
+      font-size: 1.1rem;
+      font-weight: 600;
     }
 
     .toggle-container {
       margin: 1rem auto;
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: space-between;
       gap: 1rem;
+      width: 100%;
+    }
+
+    .toggle-label {
+      font-weight: 500;
+      font-size: 0.95rem;
     }
 
     .toggle-switch {
@@ -143,49 +289,295 @@
       transform: translateX(24px);
     }
 
-    .toggle-label {
+    /* Circular Progress */
+    .circle-progress-container {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 1rem;
+      position: relative;
+    }
+
+    .circle-progress {
+      width: 100%;
+      height: 100%;
+    }
+
+    .circle-progress svg {
+      transform: rotate(-90deg);
+    }
+
+    .circle-progress circle.bg {
+      fill: none;
+      stroke: #e2e8f0;
+      stroke-width: 8;
+    }
+
+    .circle-progress circle.progress {
+      fill: none;
+      stroke: var(--accent-color);
+      stroke-width: 8;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.8s ease;
+    }
+
+    .progress-value {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.8rem;
+      font-weight: 600;
+    }
+
+    /* Motion Indicator */
+    .motion-indicator {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background-color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 1rem auto;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    body.dark-mode .motion-indicator {
+      background-color: #333;
+    }
+
+    .motion-indicator.active {
+      background-color: var(--accent-color);
+      box-shadow: 0 0 20px rgba(102, 187, 106, 0.3);
+    }
+
+    .motion-indicator.active::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background-color: rgba(102, 187, 106, 0.2);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.8); opacity: 0.7; }
+      70% { transform: scale(1.3); opacity: 0; }
+      100% { transform: scale(0.8); opacity: 0; }
+    }
+
+    .motion-status {
       font-weight: 500;
+      z-index: 1;
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      background: rgba(0,0,0,0.1);
+      border: none;
+      border-radius: 20px;
+      padding: 5px;
+      display: flex;
+      cursor: pointer;
+      position: relative;
+      width: 50px;
+      height: 26px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    body.dark-mode .theme-toggle {
+      background: rgba(255,255,255,0.1);
+    }
+
+    .theme-toggle span {
+      font-size: 16px;
+      padding: 3px;
+      transition: all 0.3s ease;
+    }
+
+    .theme-toggle .moon { 
+      opacity: 0; 
+      transform: translateX(20px);
+      position: absolute;
+      right: 5px;
+    }
+
+    body.dark-mode .theme-toggle .sun { 
+      opacity: 0; 
+      transform: translateX(-20px);
+    }
+
+    body.dark-mode .theme-toggle .moon { 
+      opacity: 1; 
+      transform: translateX(0);
+    }
+
+    /* FAB */
+    .fab {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      color: white;
+      border: none;
+      box-shadow: 0 4px 12px rgba(102, 187, 106, 0.3);
+      font-size: 1.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      z-index: 10;
+    }
+
+    .fab:hover {
+      transform: scale(1.1) rotate(90deg);
+      box-shadow: 0 6px 16px rgba(102, 187, 106, 0.4);
+    }
+
+    /* Trend Chart */
+    .trend-card {
+      grid-column: span 2;
+      padding: 1.5rem;
+    }
+
+    .trend-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .trend-select {
+      background: rgba(0,0,0,0.05);
+      border: none;
+      border-radius: 6px;
+      padding: 5px 10px;
+      color: var(--text-color);
+    }
+
+    body.dark-mode .trend-select {
+      background: rgba(255,255,255,0.1);
+      color: var(--dark-text);
+    }
+
+    .trend-chart {
+      display: flex;
+      height: 150px;
+      align-items: flex-end;
+      gap: 8px;
+      padding-top: 1rem;
+    }
+
+    .chart-line {
+      flex: 1;
+      background: var(--accent-color);
+      border-radius: 4px 4px 0 0;
+      min-height: 2px;
+      position: relative;
+    }
+
+    .chart-line::after {
+      content: attr(data-value);
+      position: absolute;
+      top: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.7rem;
     }
 
     @media (max-width: 768px) {
       .dashboard {
         grid-template-columns: 1fr;
       }
+      .status-card, .trend-card {
+        grid-column: span 1;
+      }
+      .header {
+        font-size: 2rem;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="header">🌿 Smart Plant Monitoring 🌿</div>
-
-  <div class="toggle-container">
-    <label for="darkMode">Dark Mode</label>
-    <button class="toggle" onclick="toggleDarkMode()">🌗</button>
+  <div class="header-container">
+    <h1 class="header">Smart Plant Monitoring</h1>
+    <div class="status-bar">
+      <div class="status-item active">
+        <div class="status-dot"></div>
+        <span>System Online</span>
+      </div>
+      <div class="status-item">
+        <div class="status-dot"></div>
+        <span>Last Watered: 2h ago</span>
+      </div>
+      <button class="theme-toggle" id="themeToggle">
+        <span class="sun">☀️</span>
+        <span class="moon">🌙</span>
+      </button>
+    </div>
   </div>
 
   <div class="dashboard">
+    <!-- Temperature Card -->
     <div class="card">
-      <i class="fas fa-temperature-high icon"></i>
-      <div class="value">25°C</div>
+      <div class="circle-progress-container">
+        <div class="circle-progress">
+          <svg viewBox="0 0 100 100">
+            <circle class="bg" cx="50" cy="50" r="45"></circle>
+            <circle class="progress" cx="50" cy="50" r="45" stroke-dasharray="283" stroke-dashoffset="70.75"></circle>
+          </svg>
+        </div>
+        <div class="progress-value">25°</div>
+      </div>
       <div class="label">Temperature</div>
     </div>
+
+    <!-- Humidity Card -->
     <div class="card">
-      <i class="fas fa-tint icon"></i>
-      <div class="value">60%</div>
+      <div class="circle-progress-container">
+        <div class="circle-progress">
+          <svg viewBox="0 0 100 100">
+            <circle class="bg" cx="50" cy="50" r="45"></circle>
+            <circle class="progress" cx="50" cy="50" r="45" stroke-dasharray="283" stroke-dashoffset="113.2"></circle>
+          </svg>
+        </div>
+        <div class="progress-value">60%</div>
+      </div>
       <div class="label">Humidity</div>
     </div>
+
+    <!-- Soil Moisture Card -->
     <div class="card">
-      <i class="fas fa-water icon"></i>
-      <div class="value">40%</div>
+      <div class="circle-progress-container">
+        <div class="circle-progress">
+          <svg viewBox="0 0 100 100">
+            <circle class="bg" cx="50" cy="50" r="45"></circle>
+            <circle class="progress" cx="50" cy="50" r="45" stroke-dasharray="283" stroke-dashoffset="141.5"></circle>
+          </svg>
+        </div>
+        <div class="progress-value">40%</div>
+      </div>
       <div class="label">Soil Moisture</div>
     </div>
+
+    <!-- Motion Card -->
     <div class="card">
-      <i class="fas fa-wind icon"></i>
-      <div class="value">Stable</div>
-      <div class="label">Motion</div>
+      <div class="motion-indicator" id="motionIndicator">
+        <div class="motion-status">No Motion</div>
+      </div>
+      <div class="label">Motion Detection</div>
     </div>
 
+    <!-- Controls Card -->
     <div class="card">
-      <div class="card-title" style="font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem;">System Controls</div>
+      <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px;">System Controls</div>
 
       <div class="toggle-container">
         <span class="toggle-label">PIR Sensor</span>
@@ -204,36 +596,135 @@
       </div>
     </div>
 
+    <!-- Status Overview Card -->
     <div class="card status-card">
-      <div class="label">🌱 Your plant is healthy. Keep the soil moisture above 35%</div>
+      <div class="status-item-card">
+        <div class="status-icon">🌡️</div>
+        <div class="status-info">
+          <h3>Temperature</h3>
+          <p>25°C</p>
+        </div>
+      </div>
+      <div class="status-item-card">
+        <div class="status-icon">💧</div>
+        <div class="status-info">
+          <h3>Humidity</h3>
+          <p>60%</p>
+        </div>
+      </div>
+      <div class="status-item-card">
+        <div class="status-icon">🌱</div>
+        <div class="status-info">
+          <h3>Soil Moisture</h3>
+          <p>40%</p>
+        </div>
+      </div>
+      <div class="status-item-card">
+        <div class="status-icon">🔒</div>
+        <div class="status-info">
+          <h3>Security</h3>
+          <p>Active</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trend Card -->
+    <div class="card trend-card">
+      <div class="trend-header">
+        <h3 style="margin: 0; font-weight: 600;">24h Temperature Trend</h3>
+        <select class="trend-select">
+          <option>24h</option>
+          <option>7d</option>
+          <option>30d</option>
+        </select>
+      </div>
+      <div class="trend-chart">
+        <div class="chart-line" style="height: 30%" data-value="22°"></div>
+        <div class="chart-line" style="height: 50%" data-value="24°"></div>
+        <div class="chart-line" style="height: 70%" data-value="26°"></div>
+        <div class="chart-line" style="height: 90%" data-value="28°"></div>
+        <div class="chart-line" style="height: 60%" data-value="25°"></div>
+        <div class="chart-line" style="height: 40%" data-value="23°"></div>
+        <div class="chart-line" style="height: 80%" data-value="27°"></div>
+      </div>
     </div>
   </div>
 
+  <button class="fab" id="fabButton">
+    <span>+</span>
+  </button>
+
   <script>
-    function toggleDarkMode() {
-      const root = document.documentElement;
-      if (root.style.getPropertyValue('--bg-color') === '#121212') {
-        root.style.setProperty('--bg-color', '#e8f5e9');
-        root.style.setProperty('--text-color', '#2e7d32');
-        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.6)');
-        root.style.setProperty('--accent-color', '#66bb6a');
-      } else {
-        root.style.setProperty('--bg-color', '#121212');
-        root.style.setProperty('--text-color', '#ffffff');
-        root.style.setProperty('--card-bg', 'rgba(33, 33, 33, 0.7)');
-        root.style.setProperty('--accent-color', '#81c784');
-      }
+    // Dark Mode Toggle
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+    });
+
+    // Check for saved dark mode preference
+    if (localStorage.getItem('darkMode') === 'true') {
+      document.body.classList.add('dark-mode');
     }
 
-    document.getElementById('pirToggle').addEventListener('change', function () {
-      const state = this.checked ? 'activated' : 'deactivated';
-      alert(`PIR Sensor ${state}`);
+    // Motion Detection Simulation
+    setInterval(() => {
+      if (Math.random() > 0.95) {
+        const motionIndicator = document.getElementById('motionIndicator');
+        motionIndicator.classList.add('active');
+        motionIndicator.querySelector('.motion-status').textContent = 'Motion Detected!';
+        
+        setTimeout(() => {
+          motionIndicator.classList.remove('active');
+          motionIndicator.querySelector('.motion-status').textContent = 'No Motion';
+        }, 3000);
+      }
+    }, 10000);
+
+    // FAB Button Action
+    document.getElementById('fabButton').addEventListener('click', () => {
+      alert('Quick action menu would appear here');
     });
 
-    document.getElementById('pumpToggle').addEventListener('change', function () {
-      const state = this.checked ? 'ON' : 'OFF';
-      alert(`Pump turned ${state}`);
+    // Control Toggles
+    document.getElementById('pirToggle').addEventListener('change', function() {
+      const status = this.checked ? 'activated' : 'deactivated';
+      document.querySelector('.status-item-card:nth-child(4) p').textContent = 
+        this.checked ? 'Active' : 'Inactive';
     });
+
+    document.getElementById('pumpToggle').addEventListener('change', function() {
+      const status = this.checked ? 'ON' : 'OFF';
+      // You could add pump status to the status cards if needed
+    });
+
+    // Simulate data changes
+    function simulateData() {
+      const temperature = Math.max(20, Math.min(30, 25 + (Math.random() * 4 - 2)));
+      const humidity = Math.max(50, Math.min(70, 60 + (Math.random() * 10 - 5)));
+      const moisture = Math.max(35, Math.min(45, 40 + (Math.random() * 6 - 3)));
+      
+      // Update circular progress
+      document.querySelector('.card:nth-child(1) .progress-value').textContent = Math.round(temperature) + '°';
+      document.querySelector('.card:nth-child(2) .progress-value').textContent = Math.round(humidity) + '%';
+      document.querySelector('.card:nth-child(3) .progress-value').textContent = Math.round(moisture) + '%';
+      
+      // Update status cards
+      document.querySelectorAll('.status-item-card')[0].querySelector('p').textContent = Math.round(temperature) + '°C';
+      document.querySelectorAll('.status-item-card')[1].querySelector('p').textContent = Math.round(humidity) + '%';
+      document.querySelectorAll('.status-item-card')[2].querySelector('p').textContent = Math.round(moisture) + '%';
+      
+      // Update progress circles
+      const tempOffset = 283 - (283 * (temperature / 50)); // Assuming max 50°C for visualization
+      const humidityOffset = 283 - (283 * (humidity / 100));
+      const moistureOffset = 283 - (283 * (moisture / 100));
+      
+      document.querySelector('.card:nth-child(1) .progress').style.strokeDashoffset = tempOffset;
+      document.querySelector('.card:nth-child(2) .progress').style.strokeDashoffset = humidityOffset;
+      document.querySelector('.card:nth-child(3) .progress').style.strokeDashoffset = moistureOffset;
+    }
+
+    // Update data every 5 seconds
+    setInterval(simulateData, 5000);
   </script>
 </body>
 </html>
