@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Plant Monitoring</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <style>
+    :root {
+      --bg-color: #e8f5e9;
+      --card-bg: rgba(255, 255, 255, 0.6);
+      --text-color: #2e7d32;
+      --accent-color: #66bb6a;
+      --border-radius: 1.5rem;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .header {
+      font-size: 2.5rem;
+      margin-top: 2rem;
+      font-weight: 600;
+      text-shadow: 1px 1px 3px #c8e6c9;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      width: 90%;
+      margin: 2rem 0;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 1.5rem;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.6s ease forwards;
+    }
+
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .icon {
+      font-size: 2.5rem;
+      color: var(--accent-color);
+      margin-bottom: 1rem;
+      transition: transform 0.3s;
+    }
+
+    .card:hover .icon {
+      transform: scale(1.2);
+    }
+
+    .value {
+      font-size: 2rem;
+      font-weight: 600;
+    }
+
+    .label {
+      font-size: 1rem;
+      margin-top: 0.5rem;
+      color: #388e3c;
+    }
+
+    .status-card {
+      grid-column: span 2;
+      background-color: #a5d6a7;
+      font-weight: 500;
+      color: #1b5e20;
+    }
+
+    .toggle-container {
+      margin: 1rem auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 26px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: 0.4s;
+      border-radius: 9999px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--accent-color);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(24px);
+    }
+
+    .toggle-label {
+      font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">🌿 Smart Plant Monitoring 🌿</div>
+
+  <div class="toggle-container">
+    <label for="darkMode">Dark Mode</label>
+    <button class="toggle" onclick="toggleDarkMode()">🌗</button>
+  </div>
+
+  <div class="dashboard">
+    <div class="card">
+      <i class="fas fa-temperature-high icon"></i>
+      <div class="value">25°C</div>
+      <div class="label">Temperature</div>
+    </div>
+    <div class="card">
+      <i class="fas fa-tint icon"></i>
+      <div class="value">60%</div>
+      <div class="label">Humidity</div>
+    </div>
+    <div class="card">
+      <i class="fas fa-water icon"></i>
+      <div class="value">40%</div>
+      <div class="label">Soil Moisture</div>
+    </div>
+    <div class="card">
+      <i class="fas fa-wind icon"></i>
+      <div class="value">Stable</div>
+      <div class="label">Motion</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem;">System Controls</div>
+
+      <div class="toggle-container">
+        <span class="toggle-label">PIR Sensor</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="pirToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="toggle-container">
+        <span class="toggle-label">Pump Control</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="pumpToggle" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="card status-card">
+      <div class="label">🌱 Your plant is healthy. Keep the soil moisture above 35%</div>
+    </div>
+  </div>
+
+  <script>
+    function toggleDarkMode() {
+      const root = document.documentElement;
+      if (root.style.getPropertyValue('--bg-color') === '#121212') {
+        root.style.setProperty('--bg-color', '#e8f5e9');
+        root.style.setProperty('--text-color', '#2e7d32');
+        root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.6)');
+        root.style.setProperty('--accent-color', '#66bb6a');
+      } else {
+        root.style.setProperty('--bg-color', '#121212');
+        root.style.setProperty('--text-color', '#ffffff');
+        root.style.setProperty('--card-bg', 'rgba(33, 33, 33, 0.7)');
+        root.style.setProperty('--accent-color', '#81c784');
+      }
+    }
+
+    document.getElementById('pirToggle').addEventListener('change', function () {
+      const state = this.checked ? 'activated' : 'deactivated';
+      alert(`PIR Sensor ${state}`);
+    });
+
+    document.getElementById('pumpToggle').addEventListener('change', function () {
+      const state = this.checked ? 'ON' : 'OFF';
+      alert(`Pump turned ${state}`);
+    });
+  </script>
+</body>
+</html>
