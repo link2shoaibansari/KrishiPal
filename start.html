@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PlantPal+ | Interactive Garden</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4ade80;
+      --soil-dark: #5D4037;
+      --soil-light: #8B5A2B;
+      --leaf-dark: #689F38;
+      --leaf-light: #3a5f0b;
+      --water: #40C4FF;
+      --text: #1e293b;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --sun: #FFD54F;
+      --moon: #E1F5FE;
+    }
+    
+    .dark-mode {
+      --primary: #4ade80;
+      --soil-dark: #3E2723;
+      --soil-light: #5D4037;
+      --leaf-dark: #558B2F;
+      --leaf-light: #689F38;
+      --water: #00B0FF;
+      --text: #f8fafc;
+      --bg: #1e293b;
+      --card: #0f172a;
+      --sun: #FFC107;
+      --moon: #B3E5FC;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: var(--text);
+      transition: background 0.8s ease;
+      touch-action: manipulation;
+    }
+
+    .container {
+      background: var(--card);
+      width: 360px;
+      padding: 2rem;
+      padding-bottom: 180px; /* Extra space for bottom elements */
+      border-radius: 24px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.5s ease;
+    }
+
+    /* Theme Toggle */
+    .theme-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      cursor: pointer;
+      color: var(--text);
+      opacity: 0.7;
+      transition: all 0.3s ease;
+      z-index: 10;
+    }
+
+    .theme-btn:hover {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+
+    /* Plant Bucket */
+    .plant-bucket {
+      width: 120px;
+      height: 80px;
+      background: var(--soil-light);
+      border-radius: 0 0 20px 20px;
+      position: absolute;
+      bottom: 100px; /* Higher position for button space */
+      left: 50%;
+      transform: translateX(-50%);
+      overflow: hidden;
+      box-shadow: inset 0 -10px 20px rgba(0,0,0,0.1);
+      z-index: 2;
+    }
+
+    .soil-moisture {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 0%;
+      background: var(--water);
+      opacity: 0.3;
+      transition: height 2s ease;
+    }
+
+    .soil {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to top, var(--soil-dark), var(--soil-light));
+      border-radius: 0 0 20px 20px;
+    }
+
+    /* Plant */
+    .plant {
+      width: 100px;
+      height: 180px;
+      position: absolute;
+      bottom: 180px; /* Adjusted for new bucket position */
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 3;
+    }
+
+    .stem {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 4px;
+      height: 0;
+      background: var(--leaf-light);
+      transform: translateX(-50%);
+      border-radius: 2px;
+      animation: growStem 2.5s ease-out forwards;
+    }
+
+    .leaf {
+      position: absolute;
+      width: 0;
+      height: 12px;
+      background: var(--leaf-light);
+      border-radius: 12px 0;
+      transform-origin: left center;
+      opacity: 0;
+    }
+
+    @keyframes growStem {
+      0% { height: 0; }
+      100% { height: 120px; }
+    }
+
+    @keyframes growLeaf {
+      0% { width: 0; opacity: 0; transform: rotate(var(--start-rot)) scale(0); }
+      100% { width: 30px; opacity: 1; transform: rotate(var(--end-rot)) scale(1); }
+    }
+
+    /* Rain Elements */
+    .rain-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .raindrop {
+      position: absolute;
+      width: 2px;
+      height: 10px;
+      background: var(--water);
+      border-radius: 0 0 2px 2px;
+      opacity: 0;
+      animation: fall 0.5s linear forwards;
+    }
+
+    @keyframes fall {
+      to { transform: translateY(100vh); opacity: 0.5; }
+    }
+
+    /* Button - Now at absolute bottom */
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.8rem;
+      width: calc(100% - 4rem); /* Account for container padding */
+      border-radius: 12px;
+      font-weight: 500;
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .btn:hover {
+      transform: translate(-50%, -2px);
+      box-shadow: 0 4px 12px rgba(74, 222, 128, 0.3);
+    }
+
+    /* Water Prompt - Above button */
+    .water-prompt {
+      position: absolute;
+      bottom: 80px; /* Above the button */
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.9rem;
+      color: var(--text);
+      opacity: 0.7;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      animation: pulse 2s infinite;
+      z-index: 10;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .water-icon {
+      font-size: 1.2rem;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.7; transform: translateX(-50%) scale(1); }
+      50% { opacity: 1; transform: translateX(-50%) scale(1.05); }
+    }
+
+    /* Content spacing */
+    h2 {
+      margin-top: 40px !important;
+      position: relative;
+      z-index: 10;
+    }
+
+    p {
+      position: relative;
+      z-index: 10;
+      margin-bottom: 120px; /* Space for plant */
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Theme Toggle -->
+    <button class="theme-btn" id="themeBtn">🌓</button>
+    
+    <!-- Rain Container -->
+    <div class="rain-container" id="rainContainer"></div>
+    
+    <!-- Plant - Grows from bucket -->
+    <div class="plant">
+      <div class="stem" id="stem"></div>
+    </div>
+    
+    <!-- Plant Bucket -->
+    <div class="plant-bucket">
+      <div class="soil-moisture" id="soilMoisture"></div>
+      <div class="soil"></div>
+    </div>
+    
+    <h2>Grow Your Plant</h2>
+    <p>Tap anywhere to water the soil</p>
+    
+    <!-- Water Prompt -->
+    <div class="water-prompt">
+      <span class="water-icon">💧</span>
+      <span>Tap to water</span>
+    </div>
+    
+    <!-- Button - Now at fixed bottom -->
+    <button class="btn" onclick="window.location.href='get-started.html'">Begin Growing</button>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Create leaves
+      const stem = document.getElementById('stem');
+      const leaves = [
+        { bottom: '30px', left: '50%', startRot: '-25deg', endRot: '-20deg' },
+        { bottom: '60px', left: 'calc(50% - 15px)', startRot: '10deg', endRot: '15deg' },
+        { bottom: '90px', left: 'calc(50% + 10px)', startRot: '-5deg', endRot: '-10deg' },
+        { bottom: '110px', left: 'calc(50% - 5px)', startRot: '20deg', endRot: '25deg' }
+      ];
+      
+      leaves.forEach((leaf, i) => {
+        const leafEl = document.createElement('div');
+        leafEl.className = 'leaf';
+        Object.assign(leafEl.style, {
+          bottom: leaf.bottom,
+          left: leaf.left,
+          '--start-rot': leaf.startRot,
+          '--end-rot': leaf.endRot,
+          animation: `growLeaf 0.8s ${i * 0.3 + 1}s forwards`
+        });
+        stem.appendChild(leafEl);
+      });
+
+      // Theme toggle
+      const themeBtn = document.getElementById('themeBtn');
+      themeBtn.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+        themeBtn.textContent = document.body.classList.contains('dark-mode') ? '🌞' : '🌙';
+      });
+
+      // Check for saved theme
+      if (localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark-mode');
+        themeBtn.textContent = '🌞';
+      }
+
+      // Rain interaction
+      const rainContainer = document.getElementById('rainContainer');
+      const soilMoisture = document.getElementById('soilMoisture');
+      
+      function makeItRain() {
+        // Animate soil moisture
+        soilMoisture.style.height = '40%';
+        setTimeout(() => {
+          soilMoisture.style.height = '20%';
+        }, 3000);
+        
+        // Create raindrops
+        for(let i = 0; i < 20; i++) {
+          setTimeout(() => {
+            const drop = document.createElement('div');
+            drop.className = 'raindrop';
+            drop.style.left = `${Math.random() * 100}%`;
+            drop.style.top = '-10px';
+            drop.style.animationDuration = `${0.3 + Math.random() * 0.4}s`;
+            rainContainer.appendChild(drop);
+            
+            setTimeout(() => {
+              drop.remove();
+            }, 1000);
+          }, i * 100);
+        }
+      }
+      
+      // Click/touch handler
+      document.addEventListener('click', makeItRain);
+      document.addEventListener('touchstart', makeItRain);
+    });
+  </script>
+</body>
+</html>
