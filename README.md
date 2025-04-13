@@ -62,6 +62,6 @@ This project is designed to monitor and control the environment of a plant using
 
 ## 👨‍💻 Author
 
-**Shoaib**, Final Year B.Tech (CS) Student  
+**Shoaib**, Pre-Final Year B.Tech (CS) Student  
 
 ---
