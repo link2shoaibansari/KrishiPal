@@ -3,35 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PlantPal+ | Interactive Garden</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <title>KrishiPal | Plant Protection</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --primary: #4ade80;
-      --soil-dark: #5D4037;
-      --soil-light: #8B5A2B;
-      --leaf-dark: #689F38;
-      --leaf-light: #3a5f0b;
+      --soil-dark: #ab7666;
+      --soil-light: #bf9975;
+      --leaf-dark: #335f0c;
+      --leaf-light: #314a11;
       --water: #40C4FF;
-      --text: #1e293b;
+      --text: #34507c;
       --bg: #f8fafc;
       --card: #ffffff;
-      --sun: #FFD54F;
+      --sun: #c49d1f;
       --moon: #E1F5FE;
+      --danger: #ef4444;
+      --shield: #a5b4fc;
     }
     
     .dark-mode {
       --primary: #4ade80;
       --soil-dark: #3E2723;
       --soil-light: #5D4037;
-      --leaf-dark: #558B2F;
-      --leaf-light: #689F38;
+      --leaf-dark: #26490d;
+      --leaf-light: #2c4e10;
       --water: #00B0FF;
       --text: #f8fafc;
       --bg: #1e293b;
       --card: #0f172a;
       --sun: #FFC107;
       --moon: #B3E5FC;
+      --danger: #dc2626;
+      --shield: #818cf8;
     }
 
     body {
@@ -49,15 +53,104 @@
 
     .container {
       background: var(--card);
-      width: 360px;
-      padding: 2rem;
-      padding-bottom: 180px; /* Extra space for bottom elements */
-      border-radius: 24px;
+      width: 560px;
+      padding: 5rem;
+      padding-bottom: 200px;
+      border-radius: 74px;
       text-align: center;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      box-shadow: 0 4px 20px rgba(13, 13, 13, 0.08);
       position: relative;
       overflow: hidden;
       transition: all 0.5s ease;
+    }
+
+    /* Animated Header */
+    .header {
+      position: relative;
+      margin-bottom: 2rem;
+      overflow: hidden;
+      padding-top: 1rem;
+    }
+
+    .main-title {
+      font-size: 6.5rem;
+      font-weight: 900;
+      margin: 0;
+      background: linear-gradient(90deg, var(--leaf-light), var(--primary), var(--water));
+      background-size: 300% 300%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: gradientShift 8s ease infinite;
+      position: relative;
+      z-index: 2;
+      margin-bottom: 1.5rem;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .slogan {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin: 0.5rem 0 1.5rem;
+      color: var(--text);
+      opacity: 0.8;
+      position: relative;
+      z-index: 2;
+      animation: fadeInUp 1s ease-out;
+      line-height: 0.5;
+    }
+
+    .leaf-decoration {
+      position: absolute;
+      width: 50px;
+      height: 60px;
+      background: var(--leaf-light);
+      border-radius: 50% 0 50% 50%;
+      opacity: 2.3;
+      z-index: 1;
+      animation: float 10s ease-in-out infinite;
+    }
+
+    .leaf-decoration:nth-child(1) {
+      top: 20px;
+      left: 30px;
+      transform: rotate(60deg);
+      animation-delay: 5s;
+    }
+
+    .leaf-decoration:nth-child(2) {
+      bottom: 30px;
+      right: 30px;
+      transform: rotate(-30deg);
+      animation-delay: 2.5s;
+    }
+
+    .leaf-decoration:nth-child(3) {
+      top: 40px;
+      right: 10px;
+      transform: rotate(70deg);
+      animation-delay: 4s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(var(--rotation)); }
+      50% { transform: translateY(-10px) rotate(var(--rotation)); }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 0.8;
+        transform: translateY(0);
+      }
     }
 
     /* Theme Toggle */
@@ -70,7 +163,7 @@
       font-size: 1.4rem;
       cursor: pointer;
       color: var(--text);
-      opacity: 0.7;
+      opacity: 2.7;
       transition: all 0.3s ease;
       z-index: 10;
     }
@@ -80,14 +173,38 @@
       transform: scale(1.1);
     }
 
+    /* Plant Protection Section */
+    .protection-section {
+      margin: 2rem 0;
+      padding: 2rem;
+      background: rgba(74, 222, 128, 0.1);
+      border-radius: 76px;
+      position: relative;
+      z-index: 5;
+    }
+
+    .protection-title {
+      font-size: 1.8rem;
+      margin: 0 0 1rem;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .protection-icon {
+      font-size: 2.5rem;
+    }
+
     /* Plant Bucket */
     .plant-bucket {
-      width: 120px;
-      height: 80px;
+      width: 150px;
+      height: 90px;
       background: var(--soil-light);
       border-radius: 0 0 20px 20px;
       position: absolute;
-      bottom: 100px; /* Higher position for button space */
+      bottom: 160px;
       left: 50%;
       transform: translateX(-50%);
       overflow: hidden;
@@ -103,7 +220,7 @@
       height: 0%;
       background: var(--water);
       opacity: 0.3;
-      transition: height 2s ease;
+      transition: height 5s ease;
     }
 
     .soil {
@@ -115,12 +232,12 @@
       border-radius: 0 0 20px 20px;
     }
 
-    /* Plant */
+    /* Plant with Protection Shield */
     .plant {
-      width: 100px;
-      height: 180px;
+      width: 250px;
+      height: 420px;
       position: absolute;
-      bottom: 180px; /* Adjusted for new bucket position */
+      bottom: 240px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 3;
@@ -130,32 +247,48 @@
       position: absolute;
       bottom: 0;
       left: 50%;
-      width: 4px;
+      width: 8px;
       height: 0;
       background: var(--leaf-light);
       transform: translateX(-50%);
-      border-radius: 2px;
-      animation: growStem 2.5s ease-out forwards;
+      border-radius: 5px;
+      animation: growStem 5s ease-out forwards;
     }
 
     .leaf {
       position: absolute;
       width: 0;
-      height: 12px;
+      height: 20px;
       background: var(--leaf-light);
-      border-radius: 12px 0;
+      border-radius: 35px 0;
       transform-origin: left center;
       opacity: 0;
     }
 
+    .shield {
+      position: absolute;
+      width: 0;
+      height: 0;
+      background: var(--shield);
+      border-radius: 50%;
+      opacity: 0;
+      z-index: 4;
+      animation: growShield 1s 3.5s forwards;
+    }
+
     @keyframes growStem {
       0% { height: 0; }
-      100% { height: 120px; }
+      100% { height: 150px; }
     }
 
     @keyframes growLeaf {
       0% { width: 0; opacity: 0; transform: rotate(var(--start-rot)) scale(0); }
-      100% { width: 30px; opacity: 1; transform: rotate(var(--end-rot)) scale(1); }
+      100% { width: 40px; opacity: 1; transform: rotate(var(--end-rot)) scale(1); }
+    }
+
+    @keyframes growShield {
+      0% { width: 0; height: 0; opacity: 0; transform: translate(-50%, -50%) scale(0); }
+      100% { width: 180px; height: 180px; opacity: 0.2; transform: translate(-50%, -50%) scale(1); }
     }
 
     /* Rain Elements */
@@ -179,19 +312,34 @@
       animation: fall 0.5s linear forwards;
     }
 
+    .pest {
+      position: absolute;
+      font-size: 3.2rem;
+      opacity: 0;
+      z-index: 4;
+      animation: flyIn 8s forwards;
+    }
+
+    @keyframes flyIn {
+      0% { transform: translate(100px, -50px) scale(0.5); opacity: 0; }
+      20% { transform: translate(0, 0) scale(1); opacity: 1; }
+      80% { transform: translate(0, 0) scale(1); opacity: 1; }
+      100% { transform: translate(-100px, 50px) scale(0.5); opacity: 0; }
+    }
+
     @keyframes fall {
       to { transform: translateY(100vh); opacity: 0.5; }
     }
 
-    /* Button - Now at absolute bottom */
+    /* Button */
     .btn {
       background: var(--primary);
-      color: white;
+      color: rgb(31, 1, 1);
       border: none;
       padding: 0.8rem;
-      width: calc(100% - 4rem); /* Account for container padding */
-      border-radius: 12px;
-      font-weight: 500;
+      width: calc(100% - 4rem);
+      border-radius: 82px;
+      font-weight: 900;
       position: absolute;
       bottom: 30px;
       left: 50%;
@@ -207,10 +355,26 @@
       box-shadow: 0 4px 12px rgba(74, 222, 128, 0.3);
     }
 
-    /* Water Prompt - Above button */
+    /* Nurture Text */
+    .nurture-text {
+      position: absolute;
+      bottom: 120px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      text-align: center;
+      font-size: 0.95rem;
+      color: var(--text);
+      opacity: 0.8;
+      z-index: 10;
+      padding: 0 1rem;
+      box-sizing: border-box;
+    }
+
+    /* Water Prompt */
     .water-prompt {
       position: absolute;
-      bottom: 80px; /* Above the button */
+      bottom: 90px;
       left: 50%;
       transform: translateX(-50%);
       font-size: 0.9rem;
@@ -236,15 +400,17 @@
 
     /* Content spacing */
     h2 {
-      margin-top: 40px !important;
+      margin: 2.5rem 0 !important;
       position: relative;
       z-index: 10;
+      line-height: 1.4;
     }
 
     p {
       position: relative;
       z-index: 10;
-      margin-bottom: 120px; /* Space for plant */
+      margin: 0.8rem 0;
+      line-height: 1.6;
     }
   </style>
 </head>
@@ -253,12 +419,31 @@
     <!-- Theme Toggle -->
     <button class="theme-btn" id="themeBtn">🌓</button>
     
+    <!-- Animated Header -->
+    <div class="header">
+      <div class="leaf-decoration"></div>
+      <div class="leaf-decoration"></div>
+      <div class="leaf-decoration"></div>
+      <h1 class="main-title">KrishiPal</h1>
+      <p class="slogan">Grow Your Plant, Protect Your Harvest</p>
+    </div>
+    
+    <!-- Protection Section -->
+    <div class="protection-section">
+      <h2 class="protection-title">
+        <span class="protection-icon">🛡️</span>
+        Plant Protection
+      </h2>
+      <p>Our smart monitoring keeps pests and diseases away from your plants</p>
+    </div>
+    
     <!-- Rain Container -->
     <div class="rain-container" id="rainContainer"></div>
     
-    <!-- Plant - Grows from bucket -->
-    <div class="plant">
+    <!-- Plant with Protection Shield -->
+    <div class="plant" id="plant">
       <div class="stem" id="stem"></div>
+      <div class="shield" id="shield"></div>
     </div>
     
     <!-- Plant Bucket -->
@@ -267,28 +452,30 @@
       <div class="soil"></div>
     </div>
     
-    <h2>Grow Your Plant</h2>
-    <p>Tap anywhere to water the soil</p>
+    <!-- Nurture Text -->
+    <p class="nurture-text">Nurture your plant with water and protection</p>
     
     <!-- Water Prompt -->
     <div class="water-prompt">
       <span class="water-icon">💧</span>
-      <span>Tap to water</span>
+      <span>Tap to water and protect</span>
     </div>
     
-    <!-- Button - Now at fixed bottom -->
-    <button class="btn" onclick="window.location.href='get-started.html'">Begin Growing</button>
+    <!-- Button -->
+    <button class="btn" onclick="window.location.href='server.html'">Start Protecting</button>
   </div>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // Create leaves
+      // Create leaves with better spacing
       const stem = document.getElementById('stem');
+      const plant = document.getElementById('plant');
       const leaves = [
-        { bottom: '30px', left: '50%', startRot: '-25deg', endRot: '-20deg' },
-        { bottom: '60px', left: 'calc(50% - 15px)', startRot: '10deg', endRot: '15deg' },
-        { bottom: '90px', left: 'calc(50% + 10px)', startRot: '-5deg', endRot: '-10deg' },
-        { bottom: '110px', left: 'calc(50% - 5px)', startRot: '20deg', endRot: '25deg' }
+        { bottom: '40px', left: '50%', startRot: '-25deg', endRot: '-20deg' },
+        { bottom: '80px', left: 'calc(50% - 20px)', startRot: '10deg', endRot: '15deg' },
+        { bottom: '120px', left: 'calc(50% + 15px)', startRot: '-5deg', endRot: '-10deg' },
+        { bottom: '60px', left: 'calc(50% + 18px)', startRot: '-40deg', endRot: '-35deg' },
+        { bottom: '100px', left: 'calc(50% - 18px)', startRot: '30deg', endRot: '35deg' }
       ];
       
       leaves.forEach((leaf, i) => {
@@ -302,6 +489,18 @@
           animation: `growLeaf 0.8s ${i * 0.3 + 1}s forwards`
         });
         stem.appendChild(leafEl);
+      });
+
+      // Create pests that get shielded
+      const pests = ['🦗', '🐛', '🪰'];
+      pests.forEach((pest, i) => {
+        const pestEl = document.createElement('div');
+        pestEl.className = 'pest';
+        pestEl.textContent = pest;
+        pestEl.style.top = `${60 + i * 40}px`;
+        pestEl.style.left = `${120 + i * 20}px`;
+        pestEl.style.animationDelay = `${3 + i * 0.5}s`;
+        plant.appendChild(pestEl);
       });
 
       // Theme toggle
@@ -318,16 +517,18 @@
         themeBtn.textContent = '🌞';
       }
 
-      // Rain interaction
+      // Rain and protection interaction
       const rainContainer = document.getElementById('rainContainer');
       const soilMoisture = document.getElementById('soilMoisture');
+      const shield = document.getElementById('shield');
       
       function makeItRain() {
         // Animate soil moisture
         soilMoisture.style.height = '40%';
-        setTimeout(() => {
-          soilMoisture.style.height = '20%';
-        }, 3000);
+        
+        // Activate shield
+        shield.style.left = '50%';
+        shield.style.top = '50%';
         
         // Create raindrops
         for(let i = 0; i < 20; i++) {
@@ -344,6 +545,10 @@
             }, 1000);
           }, i * 100);
         }
+        
+        setTimeout(() => {
+          soilMoisture.style.height = '20%';
+        }, 3000);
       }
       
       // Click/touch handler
