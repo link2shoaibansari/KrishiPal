@@ -1,0 +1,569 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include <DHT.h>
+#include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
+
+#define DHTPIN D5
+#define DHTTYPE DHT11
+#define IRSENSOR D6
+#define MOTOR_IN1 D7
+#define MOTOR_IN2 D8
+#define LIGHT_PIN D3  // Added for light control
+
+DHT dht(DHTPIN, DHTTYPE);
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+ESP8266WebServer server(80);
+
+unsigned long previousMillis = 0;
+const long interval = 4000;
+bool showSoil = false;
+bool motionAlert = false;
+unsigned long motionDisplayUntil = 0;
+
+bool pumpOn = false;
+bool pirEnabled = true;       // Added PIR enabled state
+bool lightOn = false;         // Added light state
+bool autoMode = true;         // Added auto/manual mode
+unsigned long pumpStartTime = 0;
+const unsigned long minPumpDuration = 10000;
+
+float tempC = 0.0;
+float humidity = 0.0;
+int soilValue = 0;
+int moisturePercent = 0;
+
+const char* ssid = "Plant Monitor";
+const char* password = "password";
+
+void handleRoot() {
+  String html = R"====(
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Smart Plant Monitoring</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: 'Segoe UI', sans-serif;
+        background: #121212;
+        color: #eee;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 2rem;
+      }
+      h1 {
+        font-size: 2.5rem;
+        color: #baf7c4;
+        margin-bottom: 2rem;
+      }
+      .status-bar {
+        background: #1e1e1e;
+        padding: 10px 20px;
+        border-radius: 20px;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        font-size: 0.9rem;
+        gap: 1rem;
+      }
+      .status-dot {
+        height: 10px;
+        width: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 5px;
+      }
+      .dashboard {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.5rem;
+        width: 100%;
+        max-width: 1000px;
+      }
+      .card {
+        background: #1e1e1e;
+        border-radius: 20px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 0 10px #00000055;
+      }
+      .dial {
+        height: 100px;
+        width: 100px;
+        border-radius: 50%;
+        border: 8px solid #444;
+        margin: 0 auto 1rem;
+        position: relative;
+        transition: border-top-color 0.3s ease;
+      }
+      .dial-value {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 1.2rem;
+        color: #fff;
+      }
+      .label {
+        margin-top: 0.5rem;
+        color: #9fefac;
+        font-weight: 600;
+      }
+      .controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .switch-group {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        margin-top: 1rem;
+      }
+      .switch-label {
+        font-size: 0.9rem;
+      }
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 40px;
+        height: 20px;
+      }
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #444;
+        transition: .4s;
+        border-radius: 34px;
+      }
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 2px;
+        bottom: 2px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+      }
+      input:checked + .slider {
+        background-color: #4caf50;
+      }
+      input:checked + .slider:before {
+        transform: translateX(20px);
+      }
+      .footer-box {
+        margin-top: 2rem;
+        background: #1e1e1e;
+        border-radius: 30px;
+        padding: 1.5rem;
+        display: flex;
+        justify-content: space-around;
+        gap: 2rem;
+        color: #c5f3c5;
+        flex-wrap: wrap;
+      }
+      .icon-text {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.95rem;
+      }
+      .floating-btn {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: #4caf50;
+        color: white;
+        font-size: 2rem;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        text-align: center;
+        line-height: 50px;
+        cursor: pointer;
+        box-shadow: 0 0 10px #4caf50aa;
+      }
+      @media (max-width: 500px) {
+        h1 { font-size: 1.8rem; }
+        .card { padding: 1rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Smart Plant Monitoring</h1>
+    <div class="status-bar">
+      <span><span class="status-dot" id="statusDot" style="background-color: #5bff9b;"></span><span id="statusText">System Online</span></span>
+    </div>
+
+    <div class="dashboard">
+      <div class="card">
+        <div class="dial" id="tempDial"><div class="dial-value" id="temp">--°</div></div>
+        <div class="label">TEMPERATURE</div>
+      </div>
+      <div class="card">
+        <div class="dial" id="humidityDial"><div class="dial-value" id="humidity">--%</div></div>
+        <div class="label">HUMIDITY</div>
+      </div>
+      <div class="card">
+        <div class="dial" id="moistureDial"><div class="dial-value" id="moisture">--%</div></div>
+        <div class="label">SOIL MOISTURE</div>
+      </div>
+      <div class="card" id="motionCard">
+        <div class="dial" id="motionDial" style="border-top-color: #4caf50;">
+          <div class="dial-value" id="motion">No Motion</div>
+        </div>
+        <div class="label">MOTION DETECTION</div>
+        <div style="margin-top: 1rem;">
+          <span class="switch-label">Alarm Sound</span>
+          <label class="switch">
+            <input type="checkbox" id="alarmToggle" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+      <div class="card controls">
+        <div class="label">SYSTEM CONTROLS</div>
+        <div class="switch-group">
+          <span class="switch-label">Auto Mode</span>
+          <label class="switch">
+            <input type="checkbox" id="autoToggle" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="switch-group">
+          <span class="switch-label">PIR Sensor</span>
+          <label class="switch">
+            <input type="checkbox" id="pirToggle" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="switch-group">
+          <span class="switch-label">Pump Control</span>
+          <label class="switch">
+            <input type="checkbox" id="pumpToggle">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="switch-group">
+          <span class="switch-label">Light Control</span>
+          <label class="switch">
+            <input type="checkbox" id="lightToggle">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-box">
+      <div class="icon-text">🌡️ <b>Temperature</b>: <span id="footerTemp">--°C</span></div>
+      <div class="icon-text">💧 <b>Humidity</b>: <span id="footerHumidity">--%</span></div>
+      <div class="icon-text">🪴 <b>Soil Moisture</b>: <span id="footerMoisture">--%</span></div>
+      <div class="icon-text">🔐 <b>Security</b>: <span id="footerSecurity">Inactive</span></div>
+      <div class="icon-text">💡 <b>Light</b>: <span id="footerLight">OFF</span></div>
+    </div>
+
+    <div class="floating-btn">+</div>
+
+    <script>
+      const statusText = document.getElementById('statusText');
+      const statusDot = document.getElementById('statusDot');
+      const alarmToggle = document.getElementById('alarmToggle');
+      const motionText = document.getElementById('motion');
+      const motionDial = document.getElementById('motionDial');
+
+      const warningSound = new Audio('https://assets.mixkit.co/sfx/download/mixkit-alert-alarm-1005.mp3');
+      warningSound.loop = true;
+
+      function updateDialColor(el, value, low, high) {
+        if (value < low) el.style.borderTopColor = '#ffa726';  // orange
+        else if (value > high) el.style.borderTopColor = '#f44336'; // red
+        else el.style.borderTopColor = '#7cf0a4'; // green
+      }
+
+      function fetchData() {
+        fetch('/data')
+          .then(res => res.json())
+          .then(data => {
+            statusText.textContent = 'System Online';
+            statusDot.style.backgroundColor = '#5bff9b';
+
+            document.getElementById('temp').textContent = data.temp + '°';
+            document.getElementById('humidity').textContent = data.humidity + '%';
+            document.getElementById('moisture').textContent = data.moisture + '%';
+
+            document.getElementById('footerTemp').textContent = data.temp + '°C';
+            document.getElementById('footerHumidity').textContent = data.humidity + '%';
+            document.getElementById('footerMoisture').textContent = data.moisture + '%';
+
+            updateDialColor(document.getElementById('tempDial'), data.temp, 15, 35);
+            updateDialColor(document.getElementById('humidityDial'), data.humidity, 30, 70);
+            updateDialColor(document.getElementById('moistureDial'), data.moisture, 40, 80);
+
+            document.getElementById('autoToggle').checked = data.autoMode;
+            document.getElementById('pirToggle').checked = data.pirEnabled;
+            document.getElementById('pumpToggle').checked = data.pump;
+            document.getElementById('lightToggle').checked = data.light;
+            document.getElementById('footerLight').textContent = data.light ? 'ON' : 'OFF';
+
+            if (data.pirEnabled && data.motion) {
+              motionText.textContent = 'Motion Detected';
+              motionDial.style.borderTopColor = '#ff4d4d';
+              document.getElementById('footerSecurity').textContent = 'Active';
+              if (alarmToggle.checked) warningSound.play();
+            } else {
+              motionText.textContent = 'No Motion';
+              motionDial.style.borderTopColor = '#4caf50';
+              document.getElementById('footerSecurity').textContent = data.pirEnabled ? 'Inactive' : 'Disabled';
+              warningSound.pause();
+              warningSound.currentTime = 0;
+            }
+          })
+          .catch(() => {
+            statusText.textContent = 'System Offline';
+            statusDot.style.backgroundColor = '#f44336';
+          });
+      }
+
+      alarmToggle.addEventListener('change', () => {
+        if (!alarmToggle.checked) {
+          warningSound.pause();
+          warningSound.currentTime = 0;
+        }
+      });
+
+      document.getElementById('pumpToggle').addEventListener('change', (e) => {
+        fetch('/control', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pump: e.target.checked })
+        });
+      });
+
+      document.getElementById('pirToggle').addEventListener('change', (e) => {
+        fetch('/control', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pir: e.target.checked })
+        });
+      });
+
+      document.getElementById('lightToggle').addEventListener('change', (e) => {
+        fetch('/control', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ light: e.target.checked })
+        });
+      });
+
+      document.getElementById('autoToggle').addEventListener('change', (e) => {
+        fetch('/control', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ auto: e.target.checked })
+        });
+      });
+
+      setInterval(fetchData, 2000);
+      fetchData();
+    </script>
+  </body>
+  </html>
+)====";
+  server.send(200, "text/html", html);
+}
+
+void handleData() {
+  String json = "{";
+  json += "\"temp\":" + String(tempC, 1) + ",";
+  json += "\"humidity\":" + String(humidity, 1) + ",";
+  json += "\"moisture\":" + String(moisturePercent) + ",";
+  json += "\"motion\":" + String((pirEnabled && motionAlert) ? "true" : "false") + ",";
+  json += "\"pump\":" + String(pumpOn ? "true" : "false") + ",";
+  json += "\"light\":" + String(lightOn ? "true" : "false") + ",";
+  json += "\"pirEnabled\":" + String(pirEnabled ? "true" : "false") + ",";
+  json += "\"autoMode\":" + String(autoMode ? "true" : "false");
+  json += "}";
+  server.send(200, "application/json", json);
+}
+
+void handleControl() {
+  if (server.hasArg("plain")) {
+    String body = server.arg("plain");
+    
+    if (body.indexOf("\"pump\"") != -1) {
+      bool newState = body.indexOf("\"pump\":true") != -1;
+      pumpOn = newState;
+      digitalWrite(MOTOR_IN1, newState ? HIGH : LOW);
+      digitalWrite(MOTOR_IN2, LOW);
+      Serial.print("Pump manually ");
+      Serial.println(newState ? "ON" : "OFF");
+    }
+    
+    if (body.indexOf("\"pir\"") != -1) {
+      pirEnabled = body.indexOf("\"pir\":true") != -1;
+      Serial.print("PIR sensor ");
+      Serial.println(pirEnabled ? "enabled" : "disabled");
+    }
+    
+    if (body.indexOf("\"light\"") != -1) {
+      lightOn = body.indexOf("\"light\":true") != -1;
+      digitalWrite(LIGHT_PIN, lightOn ? HIGH : LOW);
+      Serial.print("Light ");
+      Serial.println(lightOn ? "ON" : "OFF");
+    }
+    
+    if (body.indexOf("\"auto\"") != -1) {
+      autoMode = body.indexOf("\"auto\":true") != -1;
+      Serial.print("System mode: ");
+      Serial.println(autoMode ? "AUTO" : "MANUAL");
+    }
+  }
+  server.send(200, "text/plain", "OK");
+}
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println("ESP8266 DHT + Soil + IR + Motor Pump + Light");
+
+  dht.begin();
+  pinMode(IRSENSOR, INPUT);
+  pinMode(MOTOR_IN1, OUTPUT);
+  pinMode(MOTOR_IN2, OUTPUT);
+  pinMode(LIGHT_PIN, OUTPUT);  // Initialize light pin
+  digitalWrite(MOTOR_IN1, LOW);
+  digitalWrite(MOTOR_IN2, LOW);
+  digitalWrite(LIGHT_PIN, LOW);
+
+  lcd.init();
+  lcd.backlight();
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Env Monitor Init");
+  lcd.setCursor(0, 1);
+  lcd.print("Please wait...");
+  delay(2000);
+
+  WiFi.softAP(ssid, password);
+  Serial.print("WiFi AP started: ");
+  Serial.println(ssid);
+
+  server.on("/", handleRoot);
+  server.on("/data", handleData);
+  server.on("/control", handleControl);
+  server.begin();
+}
+
+void loop() {
+  server.handleClient();
+  unsigned long currentMillis = millis();
+
+  if (pirEnabled && digitalRead(IRSENSOR) == LOW) {
+    motionAlert = true;
+    motionDisplayUntil = currentMillis + 2000;
+    Serial.println("Motion Detected!");
+  }
+
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
+
+    tempC = dht.readTemperature();
+    humidity = dht.readHumidity();
+    soilValue = analogRead(A0);
+    moisturePercent = map(soilValue, 1024, 600, 0, 100);
+    moisturePercent = constrain(moisturePercent, 0, 100);
+
+    if (autoMode) {
+      // Automatic pump control
+      if (moisturePercent < 30 && !pumpOn) {
+        pumpOn = true;
+        pumpStartTime = currentMillis;
+        digitalWrite(MOTOR_IN1, HIGH);
+        digitalWrite(MOTOR_IN2, LOW);
+        Serial.println("Pump ON due to low moisture");
+      }
+
+      if (pumpOn) {
+        if (moisturePercent >= 40 && (currentMillis - pumpStartTime >= minPumpDuration)) {
+          pumpOn = false;
+          digitalWrite(MOTOR_IN1, LOW);
+          digitalWrite(MOTOR_IN2, LOW);
+          Serial.println("Pump OFF: Moisture restored");
+        } else {
+          digitalWrite(MOTOR_IN1, HIGH);
+          digitalWrite(MOTOR_IN2, LOW);
+        }
+      }
+
+      // Automatic light control (example: turn on at night)
+      // You can add your own logic here based on light sensor or time
+    }
+
+    Serial.print("Temp: ");
+    Serial.print(tempC);
+    Serial.print("°C | Humidity: ");
+    Serial.print(humidity);
+    Serial.print("% | Soil: ");
+    Serial.print(soilValue);
+    Serial.print(" -> ");
+    Serial.print(moisturePercent);
+    Serial.print("% | Light: ");
+    Serial.print(lightOn ? "ON" : "OFF");
+    Serial.print(" | Mode: ");
+    Serial.println(autoMode ? "AUTO" : "MANUAL");
+
+    lcd.clear();
+    if (isnan(tempC) || isnan(humidity)) {
+      lcd.setCursor(0, 0);
+      lcd.print("DHT Error!");
+    } else if (pirEnabled && motionAlert && currentMillis < motionDisplayUntil) {
+      lcd.setCursor(0, 0);
+      lcd.print("Motion Detected!");
+      lcd.setCursor(0, 1);
+      lcd.print("Animal nearby!");
+    } else {
+      if (showSoil) {
+        lcd.setCursor(0, 0);
+        lcd.print("Soil: ");
+        lcd.print(moisturePercent);
+        lcd.print("%");
+        lcd.setCursor(0, 1);
+        if (pumpOn) {
+          lcd.print(autoMode ? "Auto Pump ON" : "Manual Pump ON");
+        } else {
+          lcd.print("Soil OK");
+        }
+      } else {
+        lcd.setCursor(0, 0);
+        lcd.print("Temp: ");
+        lcd.print(tempC);
+        lcd.print((char)223);
+        lcd.print("C");
+        lcd.setCursor(0, 1);
+        lcd.print("Humidity: ");
+        lcd.print(humidity);
+        lcd.print("%");
+      }
+      showSoil = !showSoil;
+      motionAlert = false;
+    }
+  }
+}
