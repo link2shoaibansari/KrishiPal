@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Plant Monitoring</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Keep all your existing styles */
+        .chart-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 2rem auto;
+            background: #1e1e1e;
+            border-radius: 20px;
+            padding: 1rem;
+            box-shadow: 0 0 10px #00000055;
+        }
+
+        .chart-title {
+            color: #9fefac;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .chart-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .chart-wrapper {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        /* Keep all other existing styles */
+    </style>
+</head>
+
+<body>
+    <h1>Smart Plant Monitoring</h1>
+    <div class="status-bar">
+        <span><span class="status-dot" id="statusDot"></span><span id="statusText">System Online</span></span>
+    </div>
+
+    <!-- Keep your existing dashboard cards -->
+    <div class="dashboard">
+        <!-- ... existing card HTML ... -->
+    </div>
+
+    <!-- NEW: Trend Visualization Section -->
+    <div class="chart-container">
+        <h2 class="chart-title">Sensor Trends (Last 24 Hours)</h2>
+        <div class="chart-row">
+            <div class="chart-wrapper">
+                <canvas id="tempChart"></canvas>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="humidityChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-row">
+            <div class="chart-wrapper">
+                <canvas id="moistureChart"></canvas>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="pumpChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keep your existing footer box -->
+    <div class="footer-box">
+        <!-- ... existing footer ... -->
+    </div>
+
+    <script>
+        // Firebase configuration (replace with your values)
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "your-project.firebaseapp.com",
+            databaseURL: "https://your-project.firebaseio.com",
+            projectId: "your-project",
+            storageBucket: "your-project.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef123456"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Chart instances
+        const tempChart = createChart('tempChart', 'Temperature (°C)', 'rgb(255, 99, 132)');
+        const humidityChart = createChart('humidityChart', 'Humidity (%)', 'rgb(54, 162, 235)');
+        const moistureChart = createChart('moistureChart', 'Soil Moisture (%)', 'rgb(75, 192, 192)');
+        const pumpChart = createChart('pumpChart', 'Pump Activity', 'rgb(255, 159, 64)', true);
+
+        // Chart configuration
+        function createChart(id, label, color, isStepped = false) {
+            const ctx = document.getElementById(id).getContext('2d');
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: label,
+                        borderColor: color,
+                        backgroundColor: color + '20',
+                        borderWidth: 2,
+                        pointRadius: 2,
+                        fill: true,
+                        stepped: isStepped
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'hour'
+                            }
+                        },
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // Fetch historical data
+        function fetchHistoricalData() {
+            const now = new Date();
+            const twentyFourHoursAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+
+            database.ref('sensor_logs')
+                .orderByChild('timestamp')
+                .startAt(twentyFourHoursAgo.getTime().toString())
+                .once('value')
+                .then(snapshot => {
+                    const data = snapshot.val();
+                    const timestamps = [];
+                    const temps = [];
+                    const humids = [];
+                    const moistures = [];
+                    const pumps = [];
+
+                    Object.keys(data).forEach(key => {
+                        const entry = data[key];
+                        timestamps.push(new Date(parseInt(entry.timestamp)));
+                        temps.push(entry.temperature);
+                        humids.push(entry.humidity);
+                        moistures.push(entry.moisture);
+                        pumps.push(entry.pump ? 100 : 0); // For binary display
+                    });
+
+                    updateChart(tempChart, timestamps, temps);
+                    updateChart(humidityChart, timestamps, humids);
+                    updateChart(moistureChart, timestamps, moistures);
+                    updateChart(pumpChart, timestamps, pumps);
+                });
+        }
+
+        function updateChart(chart, labels, data) {
+            chart.data.labels = labels;
+            chart.data.datasets[0].data = data;
+            chart.update();
+        }
+
+        // Initial load
+        fetchHistoricalData();
+        setInterval(fetchHistoricalData, 300000); // Update every 5 minutes
+
+        // Keep all your existing real-time update code
+        // ... existing fetchData() and event listeners ...
+    </script>
+</body>
+
+</html>
