@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plant Monitor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: #1f2937;
+      color: #e5e7eb;
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+      animation: fadeIn 1s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .container {
+      background: #374151;
+      padding: 1.5rem;
+      border-radius: 1rem;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+      width: 100%;
+      max-width: 600px;
+    }
+    .gauge {
+      position: relative;
+      width: 150px;
+      height: 150px;
+      margin: 0 auto;
+    }
+    .gauge-value {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #ffffff;
+    }
+    .motion-circle {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      margin: 0 auto;
+    }
+    button {
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #2563eb;
+    }
+    .caption {
+      animation: moveText 8s linear infinite;
+    }
+    @keyframes moveText {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="text-3xl font-bold text-center text-blue-400 mb-6">Plant Monitoring</h1>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div class="bg-gray-800 p-4 rounded-lg text-center">
+        <div class="text-gray-400 font-semibold mb-2">Temperature</div>
+        <div class="gauge">
+          <canvas id="tempGauge" width="150" height="150"></canvas>
+          <div class="gauge-value" id="tempValue">-- °C</div>
+        </div>
+      </div>
+      <div class="bg-gray-800 p-4 rounded-lg text-center">
+        <div class="text-gray-400 font-semibold mb-2">Humidity</div>
+        <div class="gauge">
+          <canvas id="humidityGauge" width="150" height="150"></canvas>
+          <div class="gauge-value" id="humidityValue">-- %</div>
+        </div>
+      </div>
+      <div class="bg-gray-800 p-4 rounded-lg text-center">
+        <div class="text-gray-400 font-semibold mb-2">Soil Moisture</div>
+        <div class="gauge">
+          <canvas id="moistureGauge" width="150" height="150"></canvas>
+          <div class="gauge-value" id="moistureValue">-- %</div>
+        </div>
+      </div>
+      <div class="bg-gray-800 p-4 rounded-lg text-center">
+        <div class="text-gray-400 font-semibold mb-2">Motion</div>
+        <div class="motion-circle" id="motionCircle" style="background-color: gray;"></div>
+        <div class="text-white mt-2" id="motionText">--</div>
+      </div>
+    </div>
+    <div class="text-center mt-6 text-lg font-semibold" id="pumpStatus">Pump: OFF</div>
+    <button onclick="togglePump()" class="w-full mt-4 py-3 bg-blue-600 text-white rounded-lg text-lg font-semibold hover:bg-blue-700">Toggle Pump</button>
+    <div class="caption text-center mt-6 text-sm text-gray-500">Smart Farming | Auto Irrigation | Real-Time Data</div>
+  </div>
+
+  <script>
+    function drawGauge(canvas, value, max, unit, color) {
+      const ctx = canvas.getContext('2d');
+      const width = canvas.width;
+      const height = canvas.height;
+      ctx.clearRect(0, 0, width, height);
+      // Background arc
+      ctx.beginPath();
+      ctx.arc(width / 2, height / 2, 60, Math.PI * 0.75, Math.PI * 2.25);
+      ctx.lineWidth = 10;
+      ctx.strokeStyle = '#4b5563';
+      ctx.stroke();
+
+      // Value arc
+      const angle = (value / max) * 1.5 * Math.PI + 0.75 * Math.PI;
+      ctx.beginPath();
+      ctx.arc(width / 2, height / 2, 60, Math.PI * 0.75, angle);
+      ctx.lineWidth = 10;
+      ctx.strokeStyle = color;
+      ctx.stroke();
+    }
+
+    function fetchData() {
+      fetch('/data')
+        .then(res => res.json())
+        .then(data => {
+          // Update temperature gauge
+          document.getElementById('tempValue').textContent = data.temp + ' °C';
+          drawGauge(document.getElementById('tempGauge'), data.temp, 50, '°C', '#ef4444');
+
+          // Update humidity gauge
+          document.getElementById('humidityValue').textContent = data.humidity + ' %';
+          drawGauge(document.getElementById('humidityGauge'), data.humidity, 100, '%', '#3b82f6');
+
+          // Update soil moisture gauge
+          document.getElementById('moistureValue').textContent = data.moisture + ' %';
+          drawGauge(document.getElementById('moistureGauge'), data.moisture, 100, '%', '#10b981');
+
+          // Update motion indicator
+          const motionCircle = document.getElementById('motionCircle');
+          const motionText = document.getElementById('motionText');
+          if (data.motion) {
+            motionCircle.style.backgroundColor = '#ef4444';
+            motionText.textContent = 'Detected';
+          } else {
+            motionCircle.style.backgroundColor = '#10b981';
+            motionText.textContent = 'None';
+          }
+
+          // Update pump status
+          const status = document.getElementById('pumpStatus');
+          if (data.pump) {
+            status.textContent = 'Pump: ON';
+            status.className = 'text-center mt-6 text-lg font-semibold text-green-400';
+          } else {
+            status.textContent = 'Pump: OFF';
+            status.className = 'text-center mt-6 text-lg font-semibold text-red-400';
+          }
+        });
+    }
+
+    function togglePump() {
+      fetch('/toggle').then(fetchData);
+    }
+
+    setInterval(fetchData, 2000);
+    fetchData();
+  </script>
+</body>
+</html>
